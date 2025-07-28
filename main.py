@@ -12,6 +12,7 @@ if __name__ == "__main__":
         base_url="https://api1.raildata.org.uk/1010-disruptions-experience-api-11_0/",
         auth=uplink.auth.ApiTokenHeader("x-apikey", secrets.nrApiKey),
     )
+    print("Data provided by National Rail (https://www.nationalrail.co.uk/) and the Rail Delivery Group (https://www.raildeliverygroup.com/)")
     operators = nrDisruptions.get_toc_service_indicators()
     operators.sort(key=lambda x: x["tocName"].lower())
     for operator in operators:

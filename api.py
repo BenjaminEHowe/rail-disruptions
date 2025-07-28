@@ -1,11 +1,15 @@
 import uplink
+import uplink.auth
+
 
 @uplink.headers({
     "User-Agent": "uk.beh.rail-disruptions/0.1.0"
 })
 class NRDisruptionsClient(uplink.Consumer):
   """Client for the National Rail Disruptions API"""
-  authToken: str
+
+  def __init__(self, base_url: str, api_key: str):
+    super().__init__(base_url=base_url, auth=uplink.auth.ApiTokenHeader("x-apikey", api_key))
 
   @uplink.returns.json
   @uplink.get("tocs/serviceIndicators")

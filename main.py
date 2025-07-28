@@ -1,16 +1,15 @@
-import uplink.auth
+import os
 
-import ApiClients
-import secrets
+import api
 
 
 incidentDetails = {}
 
 
 if __name__ == "__main__":
-    nrDisruptions = ApiClients.NRDisruptionsClient(
-        base_url="https://api1.raildata.org.uk/1010-disruptions-experience-api-11_0/",
-        auth=uplink.auth.ApiTokenHeader("x-apikey", secrets.nrApiKey),
+    nrDisruptions = api.NRDisruptionsClient(
+        base_url=os.environ.get("NR_API_BASE_URL"),
+        api_key=os.environ.get("NR_API_KEY"),
     )
     print("Data provided by National Rail (https://www.nationalrail.co.uk/) and the Rail Delivery Group (https://www.raildeliverygroup.com/)")
     operators = nrDisruptions.get_toc_service_indicators()

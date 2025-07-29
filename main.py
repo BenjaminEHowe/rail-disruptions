@@ -1,7 +1,7 @@
 import os
 
 import api
-
+import model
 
 incidentDetails = {}
 
@@ -12,17 +12,15 @@ if __name__ == "__main__":
         api_key=os.environ.get("NR_API_KEY"),
     )
     print("Data provided by National Rail (https://www.nationalrail.co.uk/) and the Rail Delivery Group (https://www.raildeliverygroup.com/)")
-    operators = nrDisruptions.get_toc_service_indicators()
-    operators.sort(key=lambda x: x["tocName"].lower())
-    for operator in operators:
-        print(f"{operator["tocName"]} ({operator["tocCode"]}): {operator["tocStatusDescription"]}")
-        if "tocServiceGroup" in operator:
-            incidents = operator["tocServiceGroup"]
-            for incident in incidents:
-                incidentId = incident["currentDisruption"]
-                if incidentId not in incidentDetails:
-                    incidentDetails[incidentId] = nrDisruptions.get_incident_details(incidentId)
-                summary = incidentDetails[incidentId]["summary"]
-                if incidentDetails[incidentId]["status"] == "Cleared":
+    operatorServiceIndicators = nrDisruptions.get_toc_service_indicators()
+    operatorServiceIndicators.sort(key=lambda x: x.operator.name.lower())
+    for serviceIndicator in operatorServiceIndicators:
+        print(f"{serviceIndicator.operator.name} ({serviceIndicator.operator.code}): {serviceIndicator.status}")
+        if len(serviceIndicator.incidents):
+            for incident in serviceIndicator.incidents:
+                if incident.id not in incidentDetails:
+                    incidentDetails[incident.id] = nrDisruptions.get_incident_details(incident.id)
+                summary = incidentDetails[incident.id].summary
+                if incidentDetails[incident.id].status == model.IncidentStatus.CLEARED:
                     summary = f"CLEARED: {summary}"
-                print(f"  {summary} ({incident["customURL"]})")
+                print(f"  {summary} ({incident.url})")

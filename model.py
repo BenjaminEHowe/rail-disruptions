@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 from enum import StrEnum
 
 
@@ -16,11 +17,15 @@ class TrainOperatingCompany:
 class Incident:
   """An incident with helpful details."""
   id: str
-  version: str
   summary: str
   description: str
   status: IncidentStatus
   affectedOperators: list[TrainOperatingCompany]
+  startTs: datetime
+  expiryTs: datetime | None
+  createdTs: datetime
+  lastUpdatedTs: datetime
+  lastUpdatedBy: str
 
 @dataclass(frozen=True)
 class IncidentWithoutDetails:

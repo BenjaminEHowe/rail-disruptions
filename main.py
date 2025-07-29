@@ -20,7 +20,10 @@ if __name__ == "__main__":
             for incident in serviceIndicator.incidents:
                 if incident.id not in incidentDetails:
                     incidentDetails[incident.id] = nrDisruptions.get_incident_details(incident.id)
-                summary = incidentDetails[incident.id].summary
-                if incidentDetails[incident.id].status == model.IncidentStatus.CLEARED:
+                details = incidentDetails[incident.id]
+                summary = details.summary
+                if details.status == model.IncidentStatus.CLEARED:
                     summary = f"CLEARED: {summary}"
                 print(f"  {summary} ({incident.url})")
+                print(f"    Incident started {details.startTs.strftime("%d/%m/%Y, %H:%M:%S")}")
+                print(f"    Last updated {details.lastUpdatedTs.strftime("%d/%m/%Y, %H:%M:%S")}")

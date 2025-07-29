@@ -1,6 +1,8 @@
 import uplink
 import uplink.auth
 
+from datetime import datetime
+
 import model
 
 
@@ -68,11 +70,21 @@ class NRDisruptionsClient(uplink.Consumer):
         name=operator["tocName"],
       ))
 
+    # parse expiry timestamp
+    if json["expiryDateTime"]:
+      expiry_ts = datetime.fromisoformat(json["expiryDateTime"])
+    else:
+      expiry_ts = None
+
     return model.Incident(
       id=json["id"],
-      version=json["version"],
       summary=json["summary"],
       description=json["description"],
       status=incident_status,
       affectedOperators=affected_operators,
+      startTs=datetime.fromisoformat(json["startDateTime"]),
+      expiryTs=expiry_ts,
+      createdTs=datetime.fromisoformat(json["createdDateTime"]),
+      lastUpdatedTs=datetime.fromisoformat(json["lastModifiedDateTime"]),
+      lastUpdatedBy=json["lastChangedBy"],
     )

@@ -77,9 +77,9 @@ class NRDisruptionsClient(uplink.Consumer):
       expiry_ts = None
 
     return model.Incident(
-      id=json["id"],
+      id=json["id"], # TODO: consider generating our own IDs (ULIDs?) and using this ID as a secondary ID
       summary=json["summary"],
-      description=json["description"],
+      description=json["description"], # TODO: verify that this HTML is safe
       status=incident_status,
       affectedOperators=affected_operators,
       startTs=datetime.fromisoformat(json["startDateTime"]),

@@ -36,11 +36,11 @@
       <ul>
         {% for serviceIndicator in serviceIndicators %}
           {% if serviceIndicator.status != "Good service" %}
-            <li><a href="/operator/{{ serviceIndicator.operator.code }}">{{ serviceIndicator.operator.name }}: {{ serviceIndicator.status }}
+            <li><a href="/operator/{{ serviceIndicator.operator.code }}">{{ serviceIndicator.operator.name }}</a>: {{ serviceIndicator.status }}
               {% if serviceIndicator.incidents %}
                 <ul>
                   {% for incident in serviceIndicator.incidents %}
-                    <li><a href="/incident/{{ incident.id }}">{{ incidentDetails[incident.id].summary }}</a> (last updated: {{ incidentDetails[incident.id].lastUpdatedTs.strftime("%d/%m/%Y, %H:%M:%S") }})</li>
+                    <li>{{ incidentDetails[incident.id].summary }} (last updated: {{ incidentDetails[incident.id].lastUpdatedTs.strftime("%d/%m/%Y, %H:%M:%S") }})</li>
                   {% endfor %}
                 </ul>
               {% endif %}

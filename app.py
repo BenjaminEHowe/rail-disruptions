@@ -4,6 +4,8 @@ import logging
 import os
 import pprint
 
+from datetime import datetime
+
 import api
 
 
@@ -31,10 +33,10 @@ def all_operators():
 
 @app.route("/operator/<operator_code>")
 def operator(operator_code: str):
-  serviceIndicator = list(filter(lambda x: x.operator.code == operator_code, serviceIndicators))[0]
-  title = f"{serviceIndicator.operator.name} ({operator_code})"
+  service_indicator = list(filter(lambda x: x.operator.code == operator_code, serviceIndicators))[0]
+  title = f"{service_indicator.operator.name} ({operator_code})"
   relevant_incidents = []
-  for incidentWithoutDetails in serviceIndicator.incidents:
+  for incidentWithoutDetails in service_indicator.incidents:
     relevant_incidents.append(incidentDetails[incidentWithoutDetails.id])
   relevant_incidents.sort(key=lambda x: x.lastUpdatedTs)
   relevant_incidents.reverse()
@@ -43,6 +45,30 @@ def operator(operator_code: str):
     title=title,
     incidents=relevant_incidents,
   )
+
+
+@app.route("/operator/<operator_code>/feed")
+def operator_feed(operator_code: str):
+  service_indicator = list(filter(lambda x: x.operator.code == operator_code, serviceIndicators))[0]
+  title = f"{service_indicator.operator.name} ({operator_code})"
+  relevant_incidents = []
+  for incidentWithoutDetails in service_indicator.incidents:
+    relevant_incidents.append(incidentDetails[incidentWithoutDetails.id])
+  relevant_incidents.sort(key=lambda x: x.lastUpdatedTs)
+  relevant_incidents.reverse()
+  if relevant_incidents:
+    updated_ts = max(relevant_incidents, key=lambda x: x.lastUpdatedTs).lastUpdatedTs
+  else:
+    updated_ts = datetime.now()
+  response = flask.make_response(flask.render_template(
+    "operator_feed.xml",
+    title=title,
+    updated_ts=updated_ts,
+    operator_code=operator_code,
+    incidents=relevant_incidents,
+  ))
+  response.headers["Content-type"] = "text/xml; charset=utf-8"
+  return response
 
 
 @app.route("/raw")

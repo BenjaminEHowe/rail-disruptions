@@ -3,7 +3,7 @@
 {% block content %}
   <ul>
     {% for serviceIndicator in serviceIndicators %}
-      {% if serviceIndicator.status != "Good service" %}
+      {% if serviceIndicator.status != "Good service" or serviceIndicator.incidents %}
         <li><a href="/operator/{{ serviceIndicator.operator.code }}">{{ serviceIndicator.operator.name }}</a>: {{ serviceIndicator.status }}
           {% if serviceIndicator.incidents %}
             <ul>

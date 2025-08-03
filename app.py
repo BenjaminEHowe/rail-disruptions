@@ -2,6 +2,7 @@ import apscheduler.schedulers.background
 import flask
 import logging
 import os
+import pprint
 
 import api
 
@@ -25,6 +26,16 @@ def all_operators():
     "all_operators.html",
     incidentDetails=incidentDetails,
     serviceIndicators=serviceIndicators,
+  )
+
+
+@app.route("/raw")
+def raw_data():
+  return flask.render_template(
+    "raw.html",
+    title="Raw Data",
+    incidentDetails=pprint.pformat(incidentDetails, indent=2, width=140),
+    serviceIndicators=pprint.pformat(serviceIndicators, indent=2, width=140),
   )
 
 

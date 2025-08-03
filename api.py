@@ -58,37 +58,42 @@ class NRDisruptionsClient(uplink.Consumer):
   def get_incident_details(self, incident_number: str) -> model.Incident:
     json = self._get_incident_details(incident_number)
 
-    # parse incident status
-    if json["status"] == "Active":
-      incident_status = model.IncidentStatus.ACTIVE
-    elif json["status"] == "Cleared":
-      incident_status = model.IncidentStatus.CLEARED
-    else:
-      raise ValueError(f"Unable to parse incident {json["id"]}, unrecognised `status` of \"{json["status"]}\"")
+    try:
+      # parse incident status
+      if json["status"] == "Active":
+        incident_status = model.IncidentStatus.ACTIVE
+      elif json["status"] == "Cleared":
+        incident_status = model.IncidentStatus.CLEARED
+      else:
+        raise ValueError(f"Unable to parse incident {json["id"]}, unrecognised `status` of \"{json["status"]}\"")
 
-    # parse affected operators
-    affected_operators = []
-    for operator in json["affectedOperators"]:
-      affected_operators.append(model.TrainOperatingCompany(
-        code=operator["tocCode"],
-        name=operator["tocName"],
-      ))
+      # parse affected operators
+      affected_operators = []
+      for operator in json["affectedOperators"]:
+        affected_operators.append(model.TrainOperatingCompany(
+          code=operator["tocCode"],
+          name=operator["tocName"],
+        ))
 
-    # parse expiry timestamp
-    if json["expiryDateTime"]:
-      expiry_ts = datetime.fromisoformat(json["expiryDateTime"]).astimezone(TIMEZONE)
-    else:
-      expiry_ts = None
+      # parse expiry timestamp
+      if json["expiryDateTime"]:
+        expiry_ts = datetime.fromisoformat(json["expiryDateTime"]).astimezone(TIMEZONE)
+      else:
+        expiry_ts = None
 
-    return model.Incident(
-      id=json["id"], # TODO: consider generating our own IDs (ULIDs?) and using this ID as a secondary ID
-      summary=json["summary"],
-      description=json["description"], # TODO: verify that this HTML is safe
-      status=incident_status,
-      affectedOperators=affected_operators,
-      startTs=datetime.fromisoformat(json["startDateTime"]).astimezone(TIMEZONE),
-      expiryTs=expiry_ts,
-      createdTs=datetime.fromisoformat(json["createdDateTime"]).astimezone(TIMEZONE),
-      lastUpdatedTs=datetime.fromisoformat(json["lastModifiedDateTime"]).astimezone(TIMEZONE),
-      lastUpdatedBy=json["lastChangedBy"],
-    )
+      return model.Incident(
+        id=json["id"], # TODO: consider generating our own IDs (ULIDs?) and using this ID as a secondary ID
+        summary=json["summary"],
+        description=json["description"], # TODO: verify that this HTML is safe
+        status=incident_status,
+        affectedOperators=affected_operators,
+        startTs=datetime.fromisoformat(json["startDateTime"]).astimezone(TIMEZONE),
+        expiryTs=expiry_ts,
+        createdTs=datetime.fromisoformat(json["createdDateTime"]).astimezone(TIMEZONE),
+        lastUpdatedTs=datetime.fromisoformat(json["lastModifiedDateTime"]).astimezone(TIMEZONE),
+        lastUpdatedBy=json["lastChangedBy"],
+      )
+    except KeyError as e:
+      print("Got KeyError when trying to decode incident details:")
+      print(json)
+      raise e

@@ -2,8 +2,12 @@ import uplink
 import uplink.auth
 
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import model
+
+
+TIMEZONE = ZoneInfo("Europe/London")
 
 
 @uplink.headers({
@@ -72,7 +76,7 @@ class NRDisruptionsClient(uplink.Consumer):
 
     # parse expiry timestamp
     if json["expiryDateTime"]:
-      expiry_ts = datetime.fromisoformat(json["expiryDateTime"])
+      expiry_ts = datetime.fromisoformat(json["expiryDateTime"]).astimezone(TIMEZONE)
     else:
       expiry_ts = None
 
@@ -82,9 +86,9 @@ class NRDisruptionsClient(uplink.Consumer):
       description=json["description"], # TODO: verify that this HTML is safe
       status=incident_status,
       affectedOperators=affected_operators,
-      startTs=datetime.fromisoformat(json["startDateTime"]),
+      startTs=datetime.fromisoformat(json["startDateTime"]).astimezone(TIMEZONE),
       expiryTs=expiry_ts,
-      createdTs=datetime.fromisoformat(json["createdDateTime"]),
-      lastUpdatedTs=datetime.fromisoformat(json["lastModifiedDateTime"]),
+      createdTs=datetime.fromisoformat(json["createdDateTime"]).astimezone(TIMEZONE),
+      lastUpdatedTs=datetime.fromisoformat(json["lastModifiedDateTime"]).astimezone(TIMEZONE),
       lastUpdatedBy=json["lastChangedBy"],
     )

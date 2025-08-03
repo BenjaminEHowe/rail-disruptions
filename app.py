@@ -29,6 +29,22 @@ def all_operators():
   )
 
 
+@app.route("/operator/<operator_code>")
+def operator(operator_code: str):
+  serviceIndicator = list(filter(lambda x: x.operator.code == operator_code, serviceIndicators))[0]
+  title = f"{serviceIndicator.operator.name} ({operator_code})"
+  relevant_incidents = []
+  for incidentWithoutDetails in serviceIndicator.incidents:
+    relevant_incidents.append(incidentDetails[incidentWithoutDetails.id])
+  relevant_incidents.sort(key=lambda x: x.lastUpdatedTs)
+  relevant_incidents.reverse()
+  return flask.render_template(
+    "operator.html",
+    title=title,
+    incidents=relevant_incidents,
+  )
+
+
 @app.route("/raw")
 def raw_data():
   return flask.render_template(

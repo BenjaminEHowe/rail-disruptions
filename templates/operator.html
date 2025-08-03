@@ -1,0 +1,13 @@
+{% extends "_base.html" %}
+
+{% block content %}
+  <h1>{{ title }}</h1>
+  {% for incident in incidents %}
+    <h2>{{ incident.summary }}</h2>
+    <p>Last updated: {{ incident.lastUpdatedTs.strftime("%d/%m/%Y %H:%M") }}</p>
+    {{ incident.description | safe }}
+  {% endfor %}
+  {% if not incidents %}
+    <p>This operator currently has no active incidents.</p>
+  {% endif %}
+{% endblock %}

@@ -34,7 +34,7 @@ def raw_data():
   return flask.render_template(
     "raw.html",
     title="Raw Data",
-    incidentDetails=pprint.pformat(incidentDetails, indent=2, width=140),
+    incidentDetails=pprint.pformat(list(incidentDetails.values()), indent=2, width=140),
     serviceIndicators=pprint.pformat(serviceIndicators, indent=2, width=140),
   )
 

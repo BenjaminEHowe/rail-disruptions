@@ -1,3 +1,4 @@
+import logging
 import uplink
 import uplink.auth
 
@@ -8,6 +9,8 @@ import model
 
 
 TIMEZONE = ZoneInfo("Europe/London")
+
+logger = logging.getLogger(__name__)
 
 
 @uplink.headers({
@@ -94,6 +97,6 @@ class NRDisruptionsClient(uplink.Consumer):
         lastUpdatedBy=json["lastChangedBy"],
       )
     except KeyError as e:
-      print(f"Got KeyError when trying to decode details for incident {incident_number}:")
-      print(json)
+      logger.warn(f"Got KeyError when trying to decode details for incident {incident_number}:")
+      logger.warn(json)
       raise e

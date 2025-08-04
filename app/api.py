@@ -97,6 +97,6 @@ class NRDisruptionsClient(uplink.Consumer):
         lastUpdatedBy=json["lastChangedBy"],
       )
     except KeyError as e:
-      logger.warn(f"Got KeyError when trying to decode details for incident {incident_number}:")
-      logger.warn(json)
+      logger.warning(f"Got KeyError when trying to decode details for incident {incident_number}:")
+      logger.warning(json)
       raise e

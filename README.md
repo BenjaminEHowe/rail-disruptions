@@ -13,3 +13,13 @@ NR_API_BASE_URL=https://api1.raildata.org.uk/1010-disruptions-experience-api-11_
 ```
 
 ... and then navigate to [http://127.0.0.1:5000](http://127.0.0.1:5000).
+
+To build the container image locally:
+```bash
+docker build -t rail-disruptions:local .
+```
+
+To run the container:
+```bash
+ docker run -p 5000:5000 -e NR_API_BASE_URL=https://api1.raildata.org.uk/1010-disruptions-experience-api-11_0/ -e NR_API_KEY=secret rail-disruptions:local
+```

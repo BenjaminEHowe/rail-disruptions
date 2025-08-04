@@ -95,6 +95,7 @@ class NRDisruptionsClient(uplink.Consumer):
         createdTs=datetime.fromisoformat(json["createdDateTime"]).astimezone(TIMEZONE),
         lastUpdatedTs=datetime.fromisoformat(json["lastModifiedDateTime"]).astimezone(TIMEZONE),
         lastUpdatedBy=json["lastChangedBy"],
+        nrUrl=next(filter(lambda x: x["label"] == "Incident detail page", json["disruptionLinks"]))["uri"],
       )
     except KeyError as e:
       logger.warning(f"Got KeyError when trying to decode details for incident {incident_number}:")

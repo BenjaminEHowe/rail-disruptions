@@ -11,8 +11,8 @@
   {% for incident in incidents %}
     <entry>
       <title>{{ incident.summary }}</title>
-      <link href="https://rail-disruptions.beh.uk/incident/{{ incident.id }}" />
-      <id>https://rail-disruptions.beh.uk/incident/{{ incident.id }}</id>
+      <link href="{{ incident.nrUrl }}" />
+      <id>{{ incident.nrUrl }}</id>
       <author>
         <name>{{ incident.lastUpdatedBy }}</name></author>
       <updated>{{ incident.lastUpdatedTs.isoformat() }}</updated>

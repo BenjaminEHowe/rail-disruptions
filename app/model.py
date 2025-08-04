@@ -26,6 +26,7 @@ class Incident:
   createdTs: datetime
   lastUpdatedTs: datetime
   lastUpdatedBy: str
+  nrUrl: str
 
 @dataclass(frozen=True)
 class IncidentWithoutDetails:

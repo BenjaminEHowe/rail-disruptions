@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title>Incidents affecting {{ title }}</title>
+  <title>Disruptions affecting {{ title }}</title>
   <link href="http://example.org/"/>
   <updated>{{ updated_ts.isoformat() }}</updated>
   <id>https://rail-disruptions.beh.uk/operator/{{ operator_code }}/feed</id>

@@ -6,7 +6,7 @@
   {% for incident in incidents %}
     <h2>{{ incident.summary }}</h2>
     <p>Last updated: {{ incident.lastUpdatedTs.strftime("%d/%m/%Y %H:%M") }}</p>
-    {% if incident.description is not None %}
+    {% if incident.description is not none %}
       {{ incident.description | safe }}
     {% endif %}
     <p><a href="{{ incident.nrUrl }}">View incident on NationalRail.co.uk</a></p>

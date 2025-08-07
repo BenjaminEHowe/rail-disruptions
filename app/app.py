@@ -87,7 +87,7 @@ def raw_data():
 def refresh_cached_data():
   global incidentDetails, serviceIndicators
   logger.info("Getting updated data from API")
-  now = datetime.now()
+  now = datetime.now().astimezone(api.TIMEZONE)
 
   # delete expired incidents
   for incident in incidentDetails.values():

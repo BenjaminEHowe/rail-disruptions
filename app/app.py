@@ -44,6 +44,7 @@ def operator(operator_code: str):
   return flask.render_template(
     "operator.html",
     title=title,
+    feedUrl=f"/operator/{operator_code}/feed",
     incidents=relevant_incidents,
     updatedTs=updated_ts,
   )
@@ -59,13 +60,13 @@ def operator_feed(operator_code: str):
   relevant_incidents.sort(key=lambda x: x.lastUpdatedTs)
   relevant_incidents.reverse()
   if relevant_incidents:
-    updated_ts = max(relevant_incidents, key=lambda x: x.lastUpdatedTs).lastUpdatedTs
+    feed_updated_ts = max(relevant_incidents, key=lambda x: x.lastUpdatedTs).lastUpdatedTs
   else:
-    global updated_ts
+    feed_updated_ts = updated_ts
   response = flask.make_response(flask.render_template(
     "operator_feed.xml",
     title=title,
-    updated_ts=updated_ts,
+    updated_ts=feed_updated_ts,
     operator_code=operator_code,
     incidents=relevant_incidents,
   ))

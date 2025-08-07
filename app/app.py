@@ -7,7 +7,7 @@ import pprint
 from datetime import datetime
 
 import api
-
+import model
 
 app = flask.Flask(__name__)
 logger = logging.getLogger(__name__)
@@ -84,13 +84,43 @@ def raw_data():
 def refresh_cached_data():
   global incidentDetails, serviceIndicators
   logger.info("Getting updated data from API")
-  incidentDetails = {}
+  now = datetime.now()
+
+  # delete expired incidents
+  for incident in incidentDetails.values():
+    if incident.expiryTs is not None:
+      if now < incident.expiryTs:
+        del incidentDetails[incident.id]
+
+  # fetch service indicators
   serviceIndicators = nrDisruptions.get_toc_service_indicators()
   serviceIndicators.sort(key=lambda x: x.operator.name.lower())
+
+  # add incidents if they don't exist
   for serviceIndicator in serviceIndicators:
     for incident in serviceIndicator.incidents:
       if incident.id not in incidentDetails:
-        incidentDetails[incident.id] = nrDisruptions.get_incident_details(incident.id)
+        incidentDetails[incident.id] = model.Incident(
+          id = incident.id,
+          summary = f"Unknown incident (ID {incident.id}",
+          description = None,
+          status = model.IncidentStatus.ACTIVE,
+          affectedOperators = [serviceIndicator.operator],
+          startTs = None,
+          expiryTs = None,
+          createdTs = None,
+          lastUpdatedTs = now,
+          lastUpdatedBy = "Unknown",
+          nrUrl = incident.url,
+        )
+
+  # update all incidents
+  for incident in incidentDetails.values():
+    try:
+      incidentDetails[incident.id] = nrDisruptions.get_incident_details(incident.id)
+    except KeyError:
+      pass
+
   logger.info("Cached data updated successfully")
 
 

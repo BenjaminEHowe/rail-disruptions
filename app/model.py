@@ -18,12 +18,12 @@ class Incident:
   """An incident with helpful details."""
   id: str
   summary: str
-  description: str
+  description: str | None
   status: IncidentStatus
   affectedOperators: list[TrainOperatingCompany]
-  startTs: datetime
+  startTs: datetime | None
   expiryTs: datetime | None
-  createdTs: datetime
+  createdTs: datetime | None
   lastUpdatedTs: datetime
   lastUpdatedBy: str
   nrUrl: str

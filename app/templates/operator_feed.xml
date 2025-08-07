@@ -14,7 +14,8 @@
       <link href="{{ incident.nrUrl }}" />
       <id>{{ incident.nrUrl }}</id>
       <author>
-        <name>{{ incident.lastUpdatedBy }}</name></author>
+        <name>{{ incident.lastUpdatedBy }}</name>
+      </author>
       <updated>{{ incident.lastUpdatedTs.isoformat() }}</updated>
       <content type="html">{{ incident.description }}</content>
     </entry>

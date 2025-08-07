@@ -2,6 +2,7 @@
 
 {% block content %}
   <h1>{{ title }}</h1>
+  <p>Last updated: { updatedTs.strftime("%d/%m/%Y %H:%M") }}</p>
   {% for incident in incidents %}
     <h2>{{ incident.summary }}</h2>
     <p>Last updated: {{ incident.lastUpdatedTs.strftime("%d/%m/%Y %H:%M") }}</p>

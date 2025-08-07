@@ -20,6 +20,7 @@ scheduler = apscheduler.schedulers.background.BackgroundScheduler()
 # TODO: migrate the below state into a database
 incidentDetails = {}
 serviceIndicators = []
+updated_ts = datetime.now()
 
 
 @app.route("/")
@@ -44,6 +45,7 @@ def operator(operator_code: str):
     "operator.html",
     title=title,
     incidents=relevant_incidents,
+    updatedTs=updated_ts,
   )
 
 
@@ -59,7 +61,7 @@ def operator_feed(operator_code: str):
   if relevant_incidents:
     updated_ts = max(relevant_incidents, key=lambda x: x.lastUpdatedTs).lastUpdatedTs
   else:
-    updated_ts = datetime.now()
+    global updated_ts
   response = flask.make_response(flask.render_template(
     "operator_feed.xml",
     title=title,

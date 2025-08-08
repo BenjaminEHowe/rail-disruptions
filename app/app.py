@@ -85,7 +85,7 @@ def raw_data():
 
 
 def refresh_cached_data():
-  global incidentDetails, serviceIndicators
+  global incidentDetails, serviceIndicators, updated_ts
   logger.info("Getting updated data from API")
   now = datetime.now().astimezone(api.TIMEZONE)
 
@@ -105,7 +105,7 @@ def refresh_cached_data():
       if incident.id not in incidentDetails:
         incidentDetails[incident.id] = model.Incident(
           id = incident.id,
-          summary = f"Unknown incident (ID {incident.id}",
+          summary = f"Unknown incident (ID {incident.id})",
           description = None,
           status = model.IncidentStatus.ACTIVE,
           affectedOperators = [serviceIndicator.operator],
@@ -120,10 +120,16 @@ def refresh_cached_data():
   # update all incidents
   for incident in incidentDetails.values():
     try:
-      incidentDetails[incident.id] = nrDisruptions.get_incident_details(incident.id)
+      new_incident = nrDisruptions.get_incident_details(incident.id)
+      if now < new_incident.expiryTs:
+        if incident.id in incidentDetails:
+          del incidentDetails[incident.id]
+      else:
+        incidentDetails[incident.id] = new_incident
     except KeyError:
       pass
 
+  updated_ts = now
   logger.info("Cached data updated successfully")
 
 

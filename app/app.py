@@ -90,7 +90,7 @@ def refresh_cached_data():
   now = datetime.now().astimezone(api.TIMEZONE)
 
   # delete expired incidents
-  for incident in incidentDetails.values():
+  for incident in list(incidentDetails.values()):
     if incident.expiryTs is not None:
       if incident.expiryTs < now:
         del incidentDetails[incident.id]
@@ -120,7 +120,7 @@ def refresh_cached_data():
         )
 
   # update all incidents
-  for incident in incidentDetails.values():
+  for incident in list(incidentDetails.values()):
     if incident.id not in current_incidents:
       del incidentDetails[incident.id]
     else:

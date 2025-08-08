@@ -92,7 +92,7 @@ def refresh_cached_data():
   # delete expired incidents
   for incident in incidentDetails.values():
     if incident.expiryTs is not None:
-      if now < incident.expiryTs:
+      if incident.expiryTs < now:
         del incidentDetails[incident.id]
 
   # fetch service indicators
@@ -100,8 +100,10 @@ def refresh_cached_data():
   serviceIndicators.sort(key=lambda x: x.operator.name.lower())
 
   # add incidents if they don't exist
+  current_incidents = set()
   for serviceIndicator in serviceIndicators:
     for incident in serviceIndicator.incidents:
+      current_incidents.add(incident.id)
       if incident.id not in incidentDetails:
         incidentDetails[incident.id] = model.Incident(
           id = incident.id,
@@ -119,15 +121,13 @@ def refresh_cached_data():
 
   # update all incidents
   for incident in incidentDetails.values():
-    try:
-      new_incident = nrDisruptions.get_incident_details(incident.id)
-      if now < new_incident.expiryTs:
-        if incident.id in incidentDetails:
-          del incidentDetails[incident.id]
-      else:
-        incidentDetails[incident.id] = new_incident
-    except KeyError:
-      pass
+    if incident.id not in current_incidents:
+      del incidentDetails[incident.id]
+    else:
+      try:
+        incidentDetails[incident.id] = nrDisruptions.get_incident_details(incident.id)
+      except KeyError:
+        pass
 
   updated_ts = now
   logger.info("Cached data updated successfully")

@@ -22,10 +22,9 @@ class Incident:
   status: IncidentStatus
   affectedOperators: list[TrainOperatingCompany]
   startTs: datetime | None
-  expiryTs: datetime | None
+  endTs: datetime | None
   createdTs: datetime | None
   lastUpdatedTs: datetime
-  lastUpdatedBy: str
   nrUrl: str
 
 @dataclass(frozen=True)

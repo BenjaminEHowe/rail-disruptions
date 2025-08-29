@@ -1,6 +1,7 @@
 import logging
-import uplink
-import uplink.auth
+import re
+import requests
+import xml.etree.ElementTree as ET
 
 from datetime import datetime
 from zoneinfo import ZoneInfo
@@ -9,95 +10,90 @@ import model
 
 
 TIMEZONE = ZoneInfo("Europe/London")
+USER_AGENT = "uk.beh.rail-disruptions/0.2.0"
 
 logger = logging.getLogger(__name__)
 
 
-@uplink.headers({
-    "User-Agent": "uk.beh.rail-disruptions/0.1.0"
-})
-class NRDisruptionsClient(uplink.Consumer):
+class NRDisruptionsClient():
   """Client for the National Rail Disruptions API."""
 
 
-  def __init__(self, base_url: str, api_key: str):
-    super().__init__(base_url=base_url, auth=uplink.auth.ApiTokenHeader("x-apikey", api_key))
-
-
-  @uplink.returns.json
-  @uplink.get("tocs/serviceIndicators")
-  def _get_toc_service_indicators(self):
-    """Get service indicators for Train Operating Companies (returns dictionary)."""
+  def __init__(self, base_url: str):
+    self.base_url = base_url
 
 
   def get_toc_service_indicators(self) -> list[model.TocServiceIndicator]:
-    json = self._get_toc_service_indicators()
+    """Get service indicators for Train Operating Companies."""
+    xml_str = requests.get(f"{self.base_url}/service-indicators.xml", headers={"user-agent": USER_AGENT}).text
+    xml_str = re.sub(' xmlns="[^"]+"', "", xml_str)
+    xml_root = ET.fromstring(xml_str)
     indicators = []
-    for item in json:
+    for toc_xml in xml_root:
       incidents = []
-      if "tocServiceGroup" in item:
-        for incident in item["tocServiceGroup"]:
-          incidents.append(model.IncidentWithoutDetails(
-            id=incident["currentDisruption"],
-            url=incident["customURL"],
-          ))
+      for incident_xml in toc_xml.findall("ServiceGroup"):
+        incidents.append(model.IncidentWithoutDetails(
+          id=incident_xml.find("CurrentDisruption").text,
+          url=incident_xml.find("CustomURL").text,
+        ))
       indicators.append(model.TocServiceIndicator(
         operator=model.TrainOperatingCompany(
-          code=item["tocCode"],
-          name=item["tocName"],
+          code=toc_xml.find("TocCode").text,
+          name=toc_xml.find("TocName").text,
         ),
-        status=item["tocStatusDescription"],
+        status=toc_xml.find("StatusDescription").text,
         incidents=incidents
       ))
     return indicators
 
 
-  @uplink.returns.json
-  @uplink.get("disruptions/incidents/{incident_number}")
-  def _get_incident_details(self, incident_number: uplink.Path):
-    """Get details about an incident (returns dictionary)."""
+  # TODO: the below should return a dict mapping IDs to incidents
+  def get_incident_details(self) -> list[model.Incident]:
+    """Get all current incidents."""
+    incidents = {}
 
+    xml_str = requests.get("https://nrkbproxy.beh.uk/incidents.xml", headers={"user-agent": "not-requests"}).text
+    xml_str = re.sub(' xmlns="[^"]+"', "", xml_str)
+    xml_str = re.sub(' xmlns:com="[^"]+"', "", xml_str)
+    xml_str = re.sub("<com:", "<", xml_str)
+    xml_str = re.sub("</com:", "</", xml_str)
+    xml_root = ET.fromstring(xml_str)
 
-  def get_incident_details(self, incident_number: str) -> model.Incident:
-    json = self._get_incident_details(incident_number)
+    for xml_incident in xml_root:
+      id = xml_incident.find("IncidentNumber").text # TODO: consider generating our own IDs (ULIDs?) and using this ID as a secondary ID
 
-    try:
       # parse incident status
-      if json["status"] == "Active":
-        incident_status = model.IncidentStatus.ACTIVE
-      elif json["status"] == "Cleared":
+      if xml_incident.find("ClearedIncident") == "true":
         incident_status = model.IncidentStatus.CLEARED
       else:
-        raise ValueError(f"Unable to parse incident {json["id"]}, unrecognised `status` of \"{json["status"]}\"")
+        incident_status = model.IncidentStatus.ACTIVE
 
       # parse affected operators
       affected_operators = []
-      for operator in json["affectedOperators"]:
+      for xml_operator in xml_incident.find("Affects").find("Operators"):
         affected_operators.append(model.TrainOperatingCompany(
-          code=operator["tocCode"],
-          name=operator["tocName"],
+          code=xml_operator.find("OperatorRef").text,
+          name=xml_operator.find("OperatorName").text,
         ))
 
-      # parse expiry timestamp
-      if json["expiryDateTime"]:
-        expiry_ts = datetime.fromisoformat(json["expiryDateTime"]).astimezone(TIMEZONE)
+      # parse expiry / end ts
+      end_xml = xml_incident.find("ValidityPeriod").find("EndTime")
+      if end_xml is not None:
+        end_ts = datetime.fromisoformat(end_xml.text).astimezone(TIMEZONE)
       else:
-        expiry_ts = None
+        end_ts = None
 
-      return model.Incident(
-        id=json["id"], # TODO: consider generating our own IDs (ULIDs?) and using this ID as a secondary ID
-        summary=json["summary"],
-        description=json["description"], # TODO: verify that this HTML is safe
+      incidents[id] = model.Incident(
+        id=id,
+        summary=xml_incident.find("Summary").text,
+        description=xml_incident.find("Description").text, # TODO: verify that this HTML is safe
         status=incident_status,
         affectedOperators=affected_operators,
-        startTs=datetime.fromisoformat(json["startDateTime"]).astimezone(TIMEZONE),
-        expiryTs=expiry_ts,
-        createdTs=datetime.fromisoformat(json["createdDateTime"]).astimezone(TIMEZONE),
-        lastUpdatedTs=datetime.fromisoformat(json["lastModifiedDateTime"]).astimezone(TIMEZONE),
-        lastUpdatedBy=json["lastChangedBy"],
-        nrUrl=next(filter(lambda x: x["label"] == "Incident detail page", json["disruptionLinks"]))["uri"],
+        startTs=datetime.fromisoformat(xml_incident.find("ValidityPeriod").find("StartTime").text).astimezone(TIMEZONE),
+        endTs=end_ts,
+        createdTs=datetime.fromisoformat(xml_incident.find("CreationTime").text).astimezone(TIMEZONE),
+        lastUpdatedTs=datetime.fromisoformat(xml_incident.find("ChangeHistory").find("LastChangedDate").text).astimezone(TIMEZONE),
+        nrUrl=next(filter(lambda x: x.find("Label").text == "Incident detail page", xml_incident.find("InfoLinks"))).find("Uri").text,
       )
-    except KeyError as e:
-      logger.warning(f"Got KeyError when trying to decode details for incident {incident_number}:")
-      logger.warning(json)
-      raise e
+
+    return incidents

@@ -2,7 +2,7 @@
 Experiments with the [National Rail Disruptions API](https://raildata.org.uk/dashboard/dataProduct/P-4b85a789-5f14-4763-841a-b3ada659a51a/overview).
 
 ## Environment variables
-The following environment variables may to be set in customise how the application behaves:
+The following environment variables may be set in customise how the application behaves:
 - `NR_KB_PROXY_URL`: the base URL for an instance of [the National Rail KnowledgeBase Proxy](https://github.com/BenjaminEHowe/national-rail-knowledgebase-proxy), defaults to `https://nrkbproxy.beh.uk`.
 
 ## Development

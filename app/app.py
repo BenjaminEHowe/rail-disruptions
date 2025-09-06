@@ -102,4 +102,4 @@ def refresh_cached_data():
 logging.basicConfig(level=logging.INFO)
 refresh_cached_data()
 scheduler.start()
-scheduler.add_job(refresh_cached_data, "interval", minutes=5)
+scheduler.add_job(refresh_cached_data, "interval", minutes=1)

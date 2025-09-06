@@ -7,13 +7,12 @@ import pprint
 from datetime import datetime
 
 import api
-import model
+
 
 app = flask.Flask(__name__)
 logger = logging.getLogger(__name__)
 nrDisruptions = api.NRDisruptionsClient(
-  base_url=os.environ.get("NR_API_BASE_URL"),
-  api_key=os.environ.get("NR_API_KEY"),
+  base_url=os.environ.get("NR_KB_PROXY_URL") or "https://nrkbproxy.beh.uk",
 )
 scheduler = apscheduler.schedulers.background.BackgroundScheduler()
 
@@ -89,45 +88,12 @@ def refresh_cached_data():
   logger.info("Getting updated data from API")
   now = datetime.now().astimezone(api.TIMEZONE)
 
-  # delete expired incidents
-  for incident in list(incidentDetails.values()):
-    if incident.expiryTs is not None:
-      if incident.expiryTs < now:
-        del incidentDetails[incident.id]
-
   # fetch service indicators
   serviceIndicators = nrDisruptions.get_toc_service_indicators()
   serviceIndicators.sort(key=lambda x: x.operator.name.lower())
 
-  # add incidents if they don't exist
-  current_incidents = set()
-  for serviceIndicator in serviceIndicators:
-    for incident in serviceIndicator.incidents:
-      current_incidents.add(incident.id)
-      if incident.id not in incidentDetails:
-        incidentDetails[incident.id] = model.Incident(
-          id = incident.id,
-          summary = f"Unknown incident (ID {incident.id})",
-          description = None,
-          status = model.IncidentStatus.ACTIVE,
-          affectedOperators = [serviceIndicator.operator],
-          startTs = None,
-          expiryTs = None,
-          createdTs = None,
-          lastUpdatedTs = now,
-          lastUpdatedBy = "Unknown",
-          nrUrl = incident.url,
-        )
-
-  # update all incidents
-  for incident in list(incidentDetails.values()):
-    if incident.id not in current_incidents:
-      del incidentDetails[incident.id]
-    else:
-      try:
-        incidentDetails[incident.id] = nrDisruptions.get_incident_details(incident.id)
-      except KeyError:
-        pass
+  # fetch incidents
+  incidentDetails = nrDisruptions.get_incident_details()
 
   updated_ts = now
   logger.info("Cached data updated successfully")

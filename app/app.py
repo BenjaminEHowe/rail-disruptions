@@ -7,6 +7,7 @@ import pprint
 from datetime import datetime
 
 import api
+import model
 
 
 app = flask.Flask(__name__)
@@ -94,6 +95,23 @@ def refresh_cached_data():
 
   # fetch incidents
   incidentDetails = nrDisruptions.get_incident_details()
+
+  # add any "missing" incidents
+  for serviceIndicator in serviceIndicators:
+    for incident in serviceIndicator.incidents:
+      if incident.id not in incidentDetails:
+        incidentDetails[incident.id] = model.Incident(
+          id=incident.id,
+          summary=f"Unknown incident {incident.id}",
+          description=f"Unknown incident {incident.id}",
+          status=model.IncidentStatus.ACTIVE,
+          affectedOperators=[],
+          startTs=now,
+          endTs=None,
+          createdTs=now,
+          lastUpdatedTs=now,
+          nrUrl=incident.url,
+        )
 
   updated_ts = now
   logger.info("Cached data updated successfully")

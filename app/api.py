@@ -47,8 +47,7 @@ class NRDisruptionsClient():
     return indicators
 
 
-  # TODO: the below should return a dict mapping IDs to incidents
-  def get_incident_details(self) -> list[model.Incident]:
+  def get_incident_details(self) -> dict[str, model.Incident]:
     """Get all current incidents."""
     incidents = {}
 

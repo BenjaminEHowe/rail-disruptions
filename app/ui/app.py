@@ -7,7 +7,8 @@ import pprint
 from datetime import datetime
 
 import api
-import model
+
+from ..common import model
 
 
 app = flask.Flask(__name__)

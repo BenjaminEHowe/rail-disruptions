@@ -6,10 +6,10 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME_BASE: ${{ github.repository }}
 
 jobs:
-  build-and-push:
+  build-and-push-ingester:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -29,18 +29,19 @@ jobs:
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BASE }}-ingester
     - name: Build and push container image
       id: push
       uses: docker/build-push-action@v6
       with:
         context: .
+        file: Dockerfile-ingester
         push: true
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
     - name: Generate artifact attestation
       uses: actions/attest-build-provenance@v2
       with:
-        subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
+        subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BASE }}-ingester
         subject-digest: ${{ steps.push.outputs.digest }}
         push-to-registry: true

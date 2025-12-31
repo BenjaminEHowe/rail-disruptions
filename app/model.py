@@ -1,41 +1,35 @@
-from dataclasses import dataclass
 from datetime import datetime
-from enum import StrEnum
+from sqlalchemy import Boolean
+from sqlalchemy import DateTime
+from sqlalchemy import String
+from sqlalchemy.dialects.mysql import LONGTEXT
+from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
+from sqlalchemy.sql.functions import now
+from typing import Optional
+from ulid import ULID
 
 
-class IncidentStatus(StrEnum):
-  ACTIVE = "Active"
-  CLEARED = "Cleared"
+def generate_id(
+  prefix: Optional[str],
+):
+  identifier = str(ULID())
+  if prefix:
+    return f"{prefix}_{identifier}"
+  else:
+    return identifier
 
-@dataclass(frozen=True)
-class TrainOperatingCompany:
-  """A Train Operating Company."""
-  code: str
-  name: str
 
-@dataclass(frozen=True)
-class Incident:
-  """An incident with helpful details."""
-  id: str
-  summary: str
-  description: str | None
-  status: IncidentStatus
-  affectedOperators: list[TrainOperatingCompany]
-  startTs: datetime | None
-  endTs: datetime | None
-  createdTs: datetime | None
-  lastUpdatedTs: datetime
-  nrUrl: str
+class Base(DeclarativeBase):
+  pass
 
-@dataclass(frozen=True)
-class IncidentWithoutDetails:
-  """An incident without any details -- use the ID to retrieve the details."""
-  id: str
-  url: str
 
-@dataclass(frozen=True)
-class TocServiceIndicator:
-  """A Service Indicator for a Train Operating Company."""
-  operator: TrainOperatingCompany
-  status: str
-  incidents: list[IncidentWithoutDetails]
+class RawData(Base):
+  __tablename__ = 'raw_data'
+
+  id: Mapped[str] = mapped_column(String(30), primary_key=True, default=lambda:generate_id("raw"))
+  retrieved: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default = now())
+  hash: Mapped[str] = mapped_column(String(64))
+  parsed: Mapped[bool] = mapped_column(Boolean, default=False)
+  data: Mapped[str] = mapped_column(String(67108864).with_variant(LONGTEXT, "mysql", "mariadb"))

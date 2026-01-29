@@ -45,3 +45,40 @@ jobs:
         subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BASE }}-ingester
         subject-digest: ${{ steps.push.outputs.digest }}
         push-to-registry: true
+
+  build-and-push-parser:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    steps:
+    - name: Check out the repo
+      uses: actions/checkout@v4
+    - name: Login to registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Extract metadata (tags, labels)
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BASE }}-parser
+    - name: Build and push container image
+      id: push
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        file: Dockerfile-parser
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+    - name: Generate artifact attestation
+      uses: actions/attest-build-provenance@v2
+      with:
+        subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BASE }}-parser
+        subject-digest: ${{ steps.push.outputs.digest }}
+        push-to-registry: true

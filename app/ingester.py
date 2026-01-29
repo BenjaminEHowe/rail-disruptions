@@ -5,9 +5,9 @@ from flask import Flask
 from hashlib import sha256
 from requests import get
 
-from model import RawData
 from database import insert_raw_data
 from database import select_latest_raw_data
+from model import RawData
 
 
 flask_app = Flask(__name__)
